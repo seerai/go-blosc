@@ -1,0 +1,56 @@
+name: Build Test
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - README.md
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - README.md
+
+jobs:
+  Build-Test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.HEADLESS_USER_PAT }}
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: "1.18"
+      - name: Setup blosc library
+        run: |
+          sudo apt-get install -y libblosc-dev
+      - name: Run Tests
+        run: |
+          go test ./... -coverprofile=coverage.out -covermode=atomic
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          files: ./coverage.out
+
+      - name: Calc Semver
+        id: semver
+        uses: paulhatch/semantic-version@v4.0.2
+        with:
+          tag_prefix: "v"
+          major_pattern: "(MAJOR)"
+          minor_pattern: "(MINOR)"
+          format: "${major}.${minor}.${patch}"
+          short_tags: false
+      - uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            Next Version to be Released: ${{ steps.semver.outputs.version_tag }}
+          repo-token: ${{ secrets.HEADLESS_USER_PAT }}
+          repo-token-user-login: "seerai-headless"
+          allow-repeats: false
+      - name: Print Version tag
+        run: |
+          echo ""
