@@ -17,7 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: recursive
           token: ${{ secrets.HEADLESS_USER_PAT }}
 
       - uses: actions/setup-go@v2
@@ -45,6 +44,13 @@ jobs:
           minor_pattern: "(MINOR)"
           format: "${major}.${minor}.${patch}"
           short_tags: false
+      - uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            Next Version to be Released: ${{ steps.semver.outputs.version_tag }}
+          repo-token: ${{ secrets.HEADLESS_USER_PAT }}
+          repo-token-user-login: "seerai-headless"
+          allow-repeats: false
       - name: Print Version tag
         run: |
-          echo "Next Version to be Released: ${{ steps.semver.outputs.version_tag }}"
+          echo ""
