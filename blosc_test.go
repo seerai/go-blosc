@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	blosc "github.com/seerai/go-blosc"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRoundTrip(t *testing.T) {
@@ -15,25 +16,27 @@ func TestRoundTrip(t *testing.T) {
 	}
 
 	err := blosc.SetCompressor("lz4")
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 
 	cmp, err := blosc.Compress(1, true, buf)
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 	dec := blosc.Decompress(cmp)
-
-	if len(dec)/int(unsafe.Sizeof(buf[0])) != len(buf) {
-		t.Fatal("unexpected length on decompression")
-	}
+	require.Equal(t, len(buf)*int(unsafe.Sizeof(buf[0])), len(dec))
 
 	obuf := (*(*[1 << 32]int64)(unsafe.Pointer(&dec[0])))[:len(dec)/int(unsafe.Sizeof(buf[0]))]
 	for i, o := range obuf {
-		if o != buf[i] {
-			t.Fatal("unequal after decompression")
-		}
+		require.Equal(t, buf[i], o)
 	}
 
+}
+
+func TestEmpty(t *testing.T) {
+	var b []byte
+	err := blosc.SetCompressor("lz4")
+	require.NoError(t, err)
+
+	cmp, err := blosc.Compress(1, true, b)
+	require.NoError(t, err)
+	dec := blosc.Decompress(cmp)
+	require.Equal(t, 0, len(dec))
 }

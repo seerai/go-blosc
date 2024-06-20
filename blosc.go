@@ -53,6 +53,10 @@ func Compress(level int, shuffle bool, slice interface{}) ([]byte, error) {
 		return nil, errors.New("input data must be a slice")
 	}
 	l := rv.Len()
+	if l == 0 {
+		return []byte{}, nil
+	}
+
 	size := int(rv.Index(0).Type().Size())
 	ptr := unsafe.Pointer(rv.Pointer())
 
@@ -72,6 +76,9 @@ func Compress(level int, shuffle bool, slice interface{}) ([]byte, error) {
 
 // Decompress takes a byte of compressed data and returns the uncompressed data.
 func Decompress(compressed []byte) []byte {
+	if len(compressed) == 0 {
+		return []byte{}
+	}
 
 	nbytes := C.size_t(0)
 	cbytes := C.size_t(0)
