@@ -15,7 +15,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/pkg/errors"
+	"errors"
 )
 
 func init() {
@@ -35,7 +35,7 @@ func SetCompressor(name string) error {
 
 	res := C.blosc_set_compressor_wrapper(str)
 	if res < 0 {
-		return errors.New(fmt.Sprintf("invalid compressor '%s'", name))
+		return fmt.Errorf("invalid compressor '%s'", name)
 	}
 	return nil
 }
