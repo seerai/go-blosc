@@ -11,12 +11,12 @@ jobs:
   Test-and-Release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Increment Semver
         id: semver
-        uses: paulhatch/semantic-version@v4.0.2
+        uses: paulhatch/semantic-version@v5.3.0
         with:
           tag_prefix: "v"
           major_pattern: "(MAJOR)"
