@@ -34,7 +34,8 @@ func TestRoundTrip(t *testing.T) {
 
 	cmp, err := c.Compress(buf.Bytes())
 	require.NoError(t, err)
-	dec := c.Decompress(cmp)
+	dec, err := c.Decompress(cmp)
+	require.NoError(t, err)
 	require.Equal(t, len(buf.Bytes()), len(dec))
 
 	for _, cName := range blosc.ValidCompressors() {
@@ -45,7 +46,8 @@ func TestRoundTrip(t *testing.T) {
 
 		cmp, err := c.Compress(buf.Bytes())
 		require.NoError(t, err)
-		dec := c.Decompress(cmp)
+		dec, err := c.Decompress(cmp)
+		require.NoError(t, err)
 		require.Equal(t, len(buf.Bytes()), len(dec))
 	}
 
@@ -58,7 +60,8 @@ func TestRoundTrip(t *testing.T) {
 
 		cmp, err := c.Compress(buf.Bytes())
 		require.NoError(t, err)
-		dec := c.Decompress(cmp)
+		dec, err := c.Decompress(cmp)
+		require.NoError(t, err)
 		require.Equal(t, len(buf.Bytes()), len(dec))
 	}
 
@@ -123,7 +126,8 @@ func TestRoundTripDefaults(t *testing.T) {
 
 	cmp, err := c.Compress(buf.Bytes())
 	require.NoError(t, err)
-	dec := c.Decompress(cmp)
+	dec, err := c.Decompress(cmp)
+	require.NoError(t, err)
 	require.Equal(t, len(buf.Bytes()), len(dec))
 }
 
@@ -133,6 +137,7 @@ func TestEmpty(t *testing.T) {
 	require.NoError(t, err)
 	cmp, err := c.Compress(b)
 	require.NoError(t, err)
-	dec := c.Decompress(cmp)
+	dec, err := c.Decompress(cmp)
+	require.NoError(t, err)
 	require.Equal(t, 0, len(dec))
 }

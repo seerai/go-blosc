@@ -219,9 +219,9 @@ func (c *Context) Compress(slice []byte) ([]byte, error) {
 }
 
 // Decompress takes a byte of compressed data and returns the uncompressed data.
-func (c *Context) Decompress(compressed []byte) []byte {
+func (c *Context) Decompress(compressed []byte) ([]byte, error) {
 	if len(compressed) == 0 {
-		return []byte{}
+		return []byte{}, nil
 	}
 
 	nbytes := C.size_t(0)
@@ -231,6 +231,9 @@ func (c *Context) Decompress(compressed []byte) []byte {
 	C.blosc_cbuffer_sizes(unsafe.Pointer(&compressed[0]), &nbytes, &cbytes, &blksz)
 
 	data := make([]byte, int(nbytes))
-	C.blosc_decompress_ctx(unsafe.Pointer(&compressed[0]), unsafe.Pointer(&data[0]), nbytes, C.int(nThreads))
-	return data
+	ret := C.blosc_decompress_ctx(unsafe.Pointer(&compressed[0]), unsafe.Pointer(&data[0]), nbytes, C.int(nThreads))
+	if ret < 0 {
+		return nil, fmt.Errorf("blosc decompression error: %d", int(ret))
+	}
+	return data, nil
 }
