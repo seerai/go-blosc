@@ -35,7 +35,6 @@ const (
 	BloscLZ CNameType = "blosclz"
 	LZ4     CNameType = "lz4"
 	LZ4HC   CNameType = "lz4hc"
-	SNAPPY  CNameType = "snappy"
 	ZLIB    CNameType = "zlib"
 	ZSTD    CNameType = "zstd"
 )
@@ -45,7 +44,6 @@ func ValidCompressors() []CNameType {
 		BloscLZ,
 		LZ4,
 		LZ4HC,
-		SNAPPY,
 		ZLIB,
 		ZSTD,
 	}
@@ -213,6 +211,9 @@ func (c *Context) Compress(slice []byte) ([]byte, error) {
 		C.size_t(c.BlockSize),
 		C.int(nThreads),
 	)
+	if csize < 0 {
+		return nil, fmt.Errorf("blosc compression error while using compressor %s: %d", c.CName, int(csize))
+	}
 
 	return compressed[:csize], nil
 }
