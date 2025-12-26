@@ -1,32 +1,32 @@
 name: Test and Release
 
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - README.md
+    push:
+        branches:
+            - main
+        paths-ignore:
+            - README.md
 
 jobs:
-  Test-and-Release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Increment Semver
-        id: semver
-        uses: paulhatch/semantic-version@v5.3.0
-        with:
-          tag_prefix: "v"
-          major_pattern: "(MAJOR)"
-          minor_pattern: "(MINOR)"
-          format: "${major}.${minor}.${patch}"
-          short_tags: false
-      - name: Create tag
-        id: tag
-        run: |
-          git config user.name github-actions
-          git config user.email gcp-headless@seerai.space
-          git tag ${{ steps.semver.outputs.version_tag }} -m "Beep, Boop. Written by a robot. Beep, Boop."
-          git push --tags
+    Test-and-Release:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+            - name: Increment Semver
+              id: semver
+              uses: paulhatch/semantic-version@v5.3.0
+              with:
+                  tag_prefix: "v"
+                  major_pattern: "(MAJOR)"
+                  minor_pattern: "(MINOR)"
+                  version_format: "${major}.${minor}.${patch}"
+                  search_commit_body: true
+            - name: Create tag
+              id: tag
+              run: |
+                  git config user.name github-actions
+                  git config user.email gcp-headless@seerai.space
+                  git tag ${{ steps.semver.outputs.version_tag }} -m "Beep, Boop. Written by a robot. Beep, Boop."
+                  git push --tags
