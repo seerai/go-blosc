@@ -7,7 +7,6 @@ package blosc
 */
 import "C"
 import (
-	"errors"
 	"fmt"
 	"runtime"
 	"slices"
@@ -87,11 +86,11 @@ func (s *ShuffleType) FromString(str string) {
 var nThreads = runtime.NumCPU()
 
 type Context struct {
-	CName     CNameType
-	CLevel    uint
-	Shuffle   ShuffleType
-	BlockSize uint
-	TypeSize  uint
+	cname     CNameType
+	clevel    uint
+	shuffle   ShuffleType
+	blockSize uint
+	typeSize  uint
 	nThreads  uint
 }
 
@@ -107,7 +106,7 @@ func WithCompressor(name CNameType) ContextOption {
 			}
 			return fmt.Errorf("invalid compressor name, valid names are: %s", strings.Join(validCompressors, ", "))
 		}
-		c.CName = name
+		c.cname = name
 
 		return nil
 	}
@@ -115,7 +114,7 @@ func WithCompressor(name CNameType) ContextOption {
 
 func WithCompressionLevel(level uint) ContextOption {
 	return func(c *Context) error {
-		c.CLevel = level
+		c.clevel = level
 		return nil
 	}
 }
@@ -123,9 +122,9 @@ func WithCompressionLevel(level uint) ContextOption {
 func WithShuffle(shuffle ShuffleType) ContextOption {
 	return func(c *Context) error {
 		if shuffle != NoShuffle && shuffle != ByteShuffle && shuffle != BitShuffle {
-			return errors.New("invalid shuffle type")
+			return fmt.Errorf("invalid shuffle type %d", shuffle)
 		}
-		c.Shuffle = shuffle
+		c.shuffle = shuffle
 		return nil
 	}
 }
@@ -134,24 +133,24 @@ func WithShuffleString(shuffle string) ContextOption {
 	return func(c *Context) error {
 		var s ShuffleType
 		s.FromString(shuffle)
-		if s > BitShuffle {
+		if s == BitShuffleInvalid {
 			return fmt.Errorf("invalid shuffle type string, must be '%s', '%s', or '%s'", NoShuffleStr, ByteShuffleStr, BitShuffleStr)
 		}
-		c.Shuffle = s
+		c.shuffle = s
 		return nil
 	}
 }
 
 func WithBlockSize(blocksize uint) ContextOption {
 	return func(c *Context) error {
-		c.BlockSize = blocksize
+		c.blockSize = blocksize
 		return nil
 	}
 }
 
 func WithTypeSize(typesize uint) ContextOption {
 	return func(c *Context) error {
-		c.TypeSize = typesize
+		c.typeSize = typesize
 		return nil
 	}
 }
@@ -165,11 +164,11 @@ func WithNThreads(threads uint) ContextOption {
 
 func NewContext(opts ...ContextOption) (*Context, error) {
 	c := &Context{
-		CName:     LZ4,
-		CLevel:    5,
-		Shuffle:   NoShuffle,
-		BlockSize: 0,
-		TypeSize:  1,
+		cname:     LZ4,
+		clevel:    5,
+		shuffle:   NoShuffle,
+		blockSize: 0,
+		typeSize:  1,
 		nThreads:  uint(nThreads),
 	}
 	for _, opt := range opts {
@@ -189,30 +188,30 @@ func (c *Context) Compress(slice []byte) ([]byte, error) {
 
 	sliceLen := len(slice)
 	size := 1
-	if c.TypeSize > 0 {
-		size = int(c.TypeSize)
+	if c.typeSize > 0 {
+		size = int(c.typeSize)
 	}
 	ptr := unsafe.Pointer(&slice[0])
 
-	level := c.CLevel
+	level := c.clevel
 
 	compressed := make([]byte, sliceLen*size+C.BLOSC_MAX_OVERHEAD)
 
 	// c str for cname
-	cname := C.CString(string(c.CName))
+	cname := C.CString(string(c.cname))
 	defer C.free(unsafe.Pointer(cname))
 
-	csize := C.blosc_compress_ctx(C.int(level), C.int(c.Shuffle), C.size_t(size),
+	csize := C.blosc_compress_ctx(C.int(level), C.int(c.shuffle), C.size_t(size),
 		C.size_t(sliceLen),
 		ptr,
 		unsafe.Pointer(&compressed[0]),
 		C.size_t(len(compressed)),
 		cname,
-		C.size_t(c.BlockSize),
+		C.size_t(c.blockSize),
 		C.int(nThreads),
 	)
 	if csize < 0 {
-		return nil, fmt.Errorf("blosc compression error while using compressor %s: %d", c.CName, int(csize))
+		return nil, fmt.Errorf("blosc compression error while using compressor %s: %d", c.cname, int(csize))
 	}
 
 	return compressed[:csize], nil
