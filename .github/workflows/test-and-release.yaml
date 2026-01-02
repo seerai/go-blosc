@@ -21,8 +21,8 @@ jobs:
           tag_prefix: "v"
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
-          format: "${major}.${minor}.${patch}"
-          short_tags: false
+          version_format: "${major}.${minor}.${patch}"
+          search_commit_body: true
       - name: Create tag
         id: tag
         run: |
